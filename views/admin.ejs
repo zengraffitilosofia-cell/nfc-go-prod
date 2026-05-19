@@ -9,7 +9,13 @@
 <body class="admin-body">
 
   <header class="admin-header">
-    <a href="/admin" class="brand">NFC GO</a>
+    <a href="/admin" class="header-brand">
+      <img
+        src="https://nfcuniverse.online/wp-content/uploads/2026/03/logo-blanco-dentro-1.png"
+        alt="NFC Universe"
+        class="header-logo">
+      <span class="header-title">NFC GO</span>
+    </a>
     <nav class="admin-nav">
       <a href="/admin" class="nav-link<% if (page==='dashboard') { %> nav-link--active<% } %>">Negocios</a>
       <a href="/admin/logout" class="nav-link nav-link--logout">Salir</a>
@@ -89,7 +95,7 @@
           <small>Solo letras, números y guiones. Se usará como prefijo.</small>
         </div>
         <div class="form-group">
-          <label for="logo_url">URL del logo (opcional)</label>
+          <label for="logo_url">URL del logo <span class="label-opt">(opcional)</span></label>
           <input type="url" id="logo_url" name="logo_url" placeholder="https://...">
         </div>
         <div class="form-group">
@@ -97,7 +103,6 @@
           <input type="text" id="reward_text" name="reward_text"
                  placeholder="10% de descuento en tu próxima visita" required>
         </div>
-        <!-- Credenciales del panel de validación -->
         <div class="form-group">
           <label for="validator_username">Usuario validador <span class="label-opt">(opcional)</span></label>
           <input type="text" id="validator_username" name="validator_username" placeholder="Se genera automáticamente">
@@ -135,7 +140,7 @@
           <tbody>
             <% businesses.forEach(b => { %>
             <tr>
-              <td><%= b.name %></td>
+              <td><strong><%= b.name %></strong></td>
               <td><code class="code-chip"><%= b.slug %></code></td>
               <td>
                 <span class="tag-count">
@@ -152,7 +157,7 @@
                 </span>
               </td>
               <td class="td-actions">
-                <a href="/admin/businesses/<%= b.id %>" class="btn btn--sm">Ver etiquetas</a>
+                <a href="/admin/businesses/<%= b.id %>" class="btn btn--sm btn--secondary">Ver etiquetas</a>
                 <a href="/v/<%= b.slug %>" target="_blank" class="btn btn--sm" title="Panel de validación">Validación ↗</a>
                 <button
                   class="btn btn--sm btn--danger"
@@ -366,7 +371,7 @@
                   </form>
                 <% } else if (tag.status === 'disabled') { %>
                   <form method="POST" action="/admin/tags/<%= tag.id %>/enable" style="display:inline">
-                    <button class="btn btn--sm">Activar</button>
+                    <button class="btn btn--sm btn--secondary">Activar</button>
                   </form>
                 <% } else { %>
                   <!-- claimed o redeemed -->
