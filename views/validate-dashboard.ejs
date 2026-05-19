@@ -9,7 +9,15 @@
 <body class="admin-body">
 
   <header class="admin-header">
-    <span class="brand">NFC GO <span class="brand-sep">·</span> <%= business.name %></span>
+    <div class="header-brand">
+      <img
+        src="https://nfcuniverse.online/wp-content/uploads/2026/03/logo-blanco-dentro-1.png"
+        alt="NFC Universe"
+        class="header-logo">
+      <span class="header-title">NFC GO</span>
+      <span class="header-sep">·</span>
+      <span class="header-business"><%= business.name %></span>
+    </div>
     <nav class="admin-nav">
       <a href="/v/<%= business.slug %>/logout" class="nav-link nav-link--logout">Cerrar sesión</a>
     </nav>
@@ -51,8 +59,7 @@
           placeholder="Ej. TOSC-001"
           autocomplete="off"
           autocapitalize="characters"
-          spellcheck="false"
-        >
+          spellcheck="false">
         <button id="validate-btn" class="btn btn--primary btn--validate" onclick="validateCode()">
           Canjear
         </button>
@@ -240,9 +247,9 @@
     // ── Actualizar contadores de stats ────────────────────────────────────────
     function updateStats(redeemed) {
       if (!redeemed) return;
-      const pendEl    = document.getElementById('stat-pending');
+      const pendEl     = document.getElementById('stat-pending');
       const redeemedEl = document.getElementById('stat-redeemed');
-      if (pendEl)    pendEl.textContent    = Math.max(0, parseInt(pendEl.textContent)    - 1);
+      if (pendEl)     pendEl.textContent     = Math.max(0, parseInt(pendEl.textContent)     - 1);
       if (redeemedEl) redeemedEl.textContent = parseInt(redeemedEl.textContent) + 1;
     }
 
