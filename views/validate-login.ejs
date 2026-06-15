@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFC GO · Validation · <%= business.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="login-page">
+
+    <div class="login-logo-header">
+      <img
+        src="https://nfcuniverse.online/wp-content/uploads/2026/03/logo-blanco-dentro-1.png"
+        alt="NFC Universe"
+        class="login-logo">
+      <span class="login-brand-text">NFC GO</span>
+    </div>
+
+    <div class="card card--login">
+
+      <% if (business.logo_url) { %>
+        <img src="<%= business.logo_url %>" alt="<%= business.name %>" class="login-business-logo">
+      <% } %>
+
+      <h1 class="login-title">Validation Panel</h1>
+      <p class="login-subtitle"><strong style="color:#652d90"><%= business.name %></strong></p>
+
+      <% if (error) { %>
+        <div class="alert alert--error"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/v/<%= business.slug %>/login" class="login-form">
+        <div>
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="<%= business.slug %>"
+            autocomplete="username"
+            autofocus
+            required>
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required>
+        </div>
+        <button type="submit" class="btn btn--primary" style="width:100%;margin-top:4px">Sign in</button>
+      </form>
+
+      <p class="login-footer-note">NFC Universe · Validation panel for businesses</p>
+    </div>
+
+  </main>
+
+  <footer class="landing-footer">
+    <img
+      src="https://nfcuniverse.online/wp-content/uploads/2026/03/logo-blanco-dentro-1.png"
+      alt="NFC Universe"
+      class="footer-logo">
+    <span class="brand">NFC GO</span>
+    <span class="brand-tagline">Validation panel for businesses</span>
+  </footer>
+</body>
+</html>

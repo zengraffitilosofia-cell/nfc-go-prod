@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFC GO · Validation · <%= business.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="admin-body">
+
+  <header class="admin-header">
+    <div class="header-brand">
+      <img
+        src="https://nfcuniverse.online/wp-content/uploads/2026/03/logo-blanco-dentro-1.png"
+        alt="NFC Universe"
+        class="header-logo">
+      <span class="header-title">NFC GO</span>
+      <span class="header-sep">·</span>
+      <span class="header-business"><%= business.name %></span>
+    </div>
+    <nav class="admin-nav">
+      <a href="/v/<%= business.slug %>/logout" class="nav-link nav-link--logout">Sign out</a>
+    </nav>
+  </header>
+
+  <div class="admin-content">
+
+    <!-- Flash toast -->
+    <% if (flash) { %>
+      <div class="toast toast--<%= flash.type %>" id="vd-toast">
+        <%= flash.type === 'success' ? '✓' : '✕' %> <%= flash.msg %>
+      </div>
+    <% } %>
+
+    <!-- Stats -->
+    <section class="stats-row stats-row--3">
+      <div class="stat-card stat-card--claimed">
+        <span class="stat-value" id="stat-pending"><%= stats.pending %></span>
+        <span class="stat-label">Pending redemption</span>
+      </div>
+      <div class="stat-card stat-card--redeemed">
+        <span class="stat-value" id="stat-redeemed"><%= stats.redeemed %></span>
+        <span class="stat-label">Redeemed today</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value"><%= stats.total %></span>
+        <span class="stat-label">Total codes</span>
+      </div>
+    </section>
+
+    <!-- Formulario de validación manual -->
+    <section class="panel">
+      <h2 class="panel-title">Validate customer code</h2>
+      <div class="validate-form">
+        <input
+          type="text"
+          id="validate-input"
+          class="validate-input"
+          placeholder="E.g. TOSC-001"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false">
+        <button id="validate-btn" class="btn btn--primary btn--validate" onclick="validateCode()">
+          Redeem
+        </button>
+      </div>
+      <div id="validate-result" class="validate-result hidden"></div>
+    </section>
+
+    <!-- Tabla de códigos -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Codes</h2>
+        <div class="panel-header-tools">
+          <div class="filter-tabs">
+            <button class="filter-tab filter-tab--active" data-filter="claimed"  onclick="setFilter('claimed')">Pending</button>
+            <button class="filter-tab"                    data-filter="redeemed" onclick="setFilter('redeemed')">Redeemed</button>
+            <button class="filter-tab"                    data-filter="all"      onclick="setFilter('all')">All</button>
+          </div>
+        </div>
+      </div>
+
+      <% if (tags.length === 0) { %>
+        <p class="empty-state">No codes have been generated for this business.</p>
+      <% } else { %>
+      <div class="table-wrap">
+        <table class="data-table" id="codes-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Status</th>
+              <th>Claimed</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% tags.forEach(tag => { %>
+            <tr class="tag-row" data-status="<%= tag.status %>" data-code="<%= tag.discount_code %>">
+              <td data-label="Code">
+                <code class="code-chip code-chip--highlight"><%= tag.discount_code %></code>
+              </td>
+              <td data-label="Status">
+                <% if (tag.status === 'active') { %>
+                  <span class="badge badge--active">Available</span>
+                <% } else if (tag.status === 'claimed') { %>
+                  <span class="badge badge--claimed">Pending</span>
+                <% } else if (tag.status === 'redeemed') { %>
+                  <span class="badge badge--redeemed">Redeemed</span>
+                <% } else { %>
+                  <span class="badge badge--disabled">Disabled</span>
+                <% } %>
+              </td>
+              <td class="td-date" data-label="Claimed">
+                <%= tag.claimed_at ? new Date(tag.claimed_at).toLocaleString('en-GB') : '—' %>
+              </td>
+              <td class="td-action-col" data-label="Action">
+                <% if (tag.status === 'claimed') { %>
+                  <button
+                    class="btn btn--primary btn--sm btn-redeem"
+                    data-code="<%= tag.discount_code %>"
+                    onclick="redeemCode(this)">
+                    Redeem
+                  </button>
+                <% } else if (tag.status === 'redeemed') { %>
+                  <span class="redeem-ts td-date">
+                    <%= tag.redeemed_at ? new Date(tag.redeemed_at).toLocaleString('en-GB') : '—' %>
+                  </span>
+                <% } else { %>
+                  <span class="td-na">—</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p id="table-empty" class="empty-state hidden">No codes with this status.</p>
+      <% } %>
+    </section>
+
+  </div><!-- /admin-content -->
+
+  <script>
+    const SLUG = '<%= business.slug %>';
+    let currentFilter = 'claimed';
+
+    // ── Tab filter ────────────────────────────────────────────────────────────
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach(t => {
+        t.classList.toggle('filter-tab--active', t.dataset.filter === filter);
+      });
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const rows = document.querySelectorAll('.tag-row');
+      let visible = 0;
+      rows.forEach(row => {
+        const show = currentFilter === 'all' || row.dataset.status === currentFilter;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      const empty = document.getElementById('table-empty');
+      if (empty) empty.classList.toggle('hidden', visible > 0);
+    }
+
+    // ── Validate from the manual form ─────────────────────────────────────────
+    async function validateCode() {
+      const input = document.getElementById('validate-input');
+      const btn   = document.getElementById('validate-btn');
+      const code  = input.value.trim().toUpperCase();
+      if (!code) { showResult(false, 'Enter a code.'); return; }
+
+      btn.disabled = true;
+      try {
+        const data = await postValidate(code);
+        showResult(data.success, data.message);
+        if (data.success) {
+          updateRow(code);
+          updateStats(true);
+          input.value = '';
+        }
+      } catch {
+        showResult(false, 'Connection error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    // ── Redeem from table button ──────────────────────────────────────────────
+    async function redeemCode(btn) {
+      const code = btn.dataset.code;
+      btn.disabled = true;
+      try {
+        const data = await postValidate(code);
+        showResult(data.success, data.message);
+        if (data.success) {
+          updateRow(code);
+          updateStats(true);
+        } else {
+          btn.disabled = false;
+        }
+      } catch {
+        showResult(false, 'Connection error. Please try again.');
+        btn.disabled = false;
+      }
+    }
+
+    // ── Server call ───────────────────────────────────────────────────────────
+    async function postValidate(code) {
+      const resp = await fetch(`/v/${SLUG}/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      return resp.json();
+    }
+
+    // ── Visual result ─────────────────────────────────────────────────────────
+    function showResult(success, message) {
+      const el = document.getElementById('validate-result');
+      el.textContent = (success ? '✓ ' : '✕ ') + message;
+      el.className = `validate-result validate-result--${success ? 'success' : 'error'}`;
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    // ── Update table row ──────────────────────────────────────────────────────
+    function updateRow(code) {
+      const rows = document.querySelectorAll('.tag-row');
+      const now  = new Date().toLocaleString('en-GB');
+      rows.forEach(row => {
+        if (row.dataset.code.toUpperCase() !== code.toUpperCase()) return;
+        row.dataset.status = 'redeemed';
+
+        const badge = row.querySelector('.badge');
+        if (badge) { badge.textContent = 'Redeemed'; badge.className = 'badge badge--redeemed'; }
+
+        const actionCell = row.querySelector('.td-action-col');
+        if (actionCell) actionCell.innerHTML = `<span class="redeem-ts td-date">${now}</span>`;
+      });
+      applyFilter();
+    }
+
+    // ── Update stat counters ──────────────────────────────────────────────────
+    function updateStats(redeemed) {
+      if (!redeemed) return;
+      const pendEl     = document.getElementById('stat-pending');
+      const redeemedEl = document.getElementById('stat-redeemed');
+      if (pendEl)     pendEl.textContent     = Math.max(0, parseInt(pendEl.textContent)     - 1);
+      if (redeemedEl) redeemedEl.textContent = parseInt(redeemedEl.textContent) + 1;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    applyFilter();
+
+    document.getElementById('validate-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') validateCode();
+    });
+
+    // Auto-hide flash toast
+    const toast = document.getElementById('vd-toast');
+    if (toast) setTimeout(() => {
+      toast.classList.add('toast--hiding');
+      toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, 4000);
+  </script>
+</body>
+</html>
